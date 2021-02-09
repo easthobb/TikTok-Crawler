@@ -33,9 +33,9 @@ class TikTokCrawler(object):
     def upsert_db_video_info(self,video_info_list):
         pass
 
-    def upsert_db_hashtag_info(self,video_info_list):
+    def upsert_db_hashtag_info(self,hashtag_info_list):
         pass
-    
+
     def start(self):
         pass
 
