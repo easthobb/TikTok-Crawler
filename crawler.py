@@ -6,7 +6,7 @@ import json
 # import urllib
 import random
 # import sqlalchemy
-# from sqlalchemy import create_engine
+from sqlalchemy import create_engine
 
 DB_CONNECT_INFO = ""
 
@@ -15,7 +15,7 @@ class TikTokCrawler(object):
 
     def __init__(self, user_id):
 
-        self.db_connection_info = ""
+        
         self.channel_id = ""  # 1232124541234 정수문자열형태
         self.secret_id = ""  # MAS21das123asd 해싱형태
         self.user_id = user_id
@@ -180,47 +180,129 @@ class TikTokCrawler(object):
         return hashtag_info_list
 
     def upsert_db_channel_info(self, channel_info):
-        pass
+        
+        db_engine = create_engine(self.db_connection_info)
+
+        try:
+            query = '''
+                insert into channel_list (channel_id,channel_user_id,channel_secret_id,channel_nickname,channel_registered_date)
+                values ( %(channel_id)s,%(channel_user_id)s,%(channel_secret_id)s,%(channel_nickname)s,%(channel_registered_date)s)
+                on conflict (channel_id) DO UPDATE SET channel_user_id = %(channel_user_id)s, channel_nickname = %(channel_nickname)s;
+            '''
+            params = {
+                'channel_id':channel_info['channel_id'],
+                'channel_user_id':channel_info['channel_user_id'],
+                'channel_secret_id':channel_info['channel_secret_id'],
+                'channel_nickname':channel_info['channel_nickname'],
+                'channel_registered_date':channel_info['channel_registerd_date']
+            }
+            db_engine.execute(query,params)## at DB channel_info table update
+        except Exception as e:
+            print(e)
+        try:
+            query = '''
+                insert into channel_info_daily (channel_crawl_date,channel_id,following_count,follower_count,heart_count,digg_count,video_count)
+                values (%(channel_crawl_date)s,%(channel_id)s,%(following_count)s,%(follower_count)s,%(heart_count)s,%(digg_count)s,%(video_count)s)
+                on conflict do nothing;
+                '''
+            params = { 
+                'channel_crawl_date':channel_info['channel_crawl_date'],
+                'channel_id':channel_info['channel_id'],
+                'following_count':channel_info['following_count'],
+                'follower_count':channel_info['follower_count'],
+                'heart_count':channel_info['heart_count'],
+                'digg_count':channel_info['digg_count'],
+                'video_count':channel_info['video_count']
+            }
+            #db_engine.execute(query,params)## at DB channel_info table update
+        except Exception as e:
+            print(e)
+        
+        db_engine.dispose()
+        print("UPSERT DB CHANNEL INFO& DAILY TABLES DONE")
 
     def upsert_db_video_info(self, video_info_list):
-        pass
+        db_engine = create_engine(self.db_connection_info) # set DB engine by attribute's db info
+
+        for video_info in video_info_list:
+            try:# video_list tabel upsert sequence
+                query = '''
+                    insert into video_list(video_id,channel_id,video_create_date,video_description,video_hashtag)
+                    values (%(video_id)s,%(channel_id)s,%(video_create_date)s,%(video_description)s,%(video_hashtag)s)
+                    on conflict do nothing;
+                    '''
+                params = {
+                    'video_id' : video_info['video_id'],
+                    'channel_id' : video_info['channel_id'],
+                    'video_create_date' : video_info['video_create_date'],
+                    'video_description' : video_info['video_description'],
+                    'video_hashtag': video_info['video_hashtag']
+                }
+                db_engine.execute(query,params)
+            except Exception as e:
+                print(e)
+            
+            try:
+                query = '''
+                    insert into video_info_daily(video_crawl_date, video_id, digg_count, share_count,comment_count,play_count)
+                    values (%(video_crawl_date)s, %(video_id)s, %(digg_count)s, %(share_count)s,%(comment_count)s,%(play_count)s)
+                    on conflict do update set digg_count =%(digg_count)s, share_count = %(share_count)s, comment_count = %(comment_count)s,play_count = %(play_count)s;
+                    '''
+                params = {
+                    'video_crawl_date' : video_info['video_crawl_date'],
+                    'video_id' : video_info['video_id'],
+                    'digg_count':video_info['digg_count'],
+                    'share_count':video_info['share_count'],
+                    'comment_count':video_info['comment_count'],
+                    'play_count':video_info['play_count'],
+                }
+                db_engine.execute(query,params)
+            except Exception as e:
+                print(e)
+        db_engine.dispose()
+        print('UPSERT DB VIDEO INFO&DAILY TABLE DONE')
+
 
     def upsert_db_hashtag_info(self, hashtag_info_list):
+        
+        db_engine = create_engine(self.db_connection_info) # set DB engine by attribute's db info
+
         for hashtag in hashtag_info_list:
             try:
                 query = '''
-                insert into hashtag_info_daily(tag_crawl_date, tag_id, tag_title, tag_description,tag_video_count,tag_view_count)
-                values (%(tag_crawl_date)s, %(tag_id)s, %(tag_title)s, %(tag_description)s,%(tag_video_count)s,%(tag_view_count)s)
-                on conflict do nothing;
+                    insert into hashtag_info_daily(tag_crawl_date, tag_id, tag_title, tag_description,tag_video_count,tag_view_count)
+                    alues (%(tag_crawl_date)s, %(tag_id)s, %(tag_title)s, %(tag_description)s,%(tag_video_count)s,%(tag_view_count)s)
+                    on conflict do nothing;
                 '''
                 params = {
-
+                    'tag_crawl_date' : hashtag['tag_crawl_date'],
+                    'tag_id': hashtag['tag_id'],
+                    'tag_title': hashtag['tag_title'],
+                    'tag_description': hashtag['tag_description'],
+                    'tag_video_count': hashtag['tag_video_count'],
+                    'tag_view_count': hashtag['tag_view_count'],  
                 }
-        
+                db_engine.execute(query,params)
+            except Exception as e:
+                print(e)
+        db_engine.dispose()
+        print("UPSERT DB HASHTAG DONE.")
 
     def start(self):
 
-        # secret_id = self.convert_user_id_to_secret_id(self.user_id)
-        # self.secret_id = secret_id
-        # # for testing
-        # print("CHANNEL SECRET ID : ", secret_id)
+        secret_id = self.convert_user_id_to_secret_id(self.user_id)
+        self.secret_id = secret_id
+        print("CHANNEL SECRET ID : ", secret_id)
         
-        # channel_info = self.crawl_channel_info(self.secret_id)
-        # #for testing
-        # for k,v in channel_info.items():
-        #     print(k,v)
+        channel_info = self.crawl_channel_info(self.secret_id)
+        print(channel_info)    
+        #video_info_list = self.crawl_video_info(self.secret_id)
+        #hashtag_info_list = self.crawl_hashtag_info()
         
-        # #for testing
-        # video_info_list = self.crawl_video_info(self.secret_id)
-        # print(video_info_list)
-        
-        hashtag_info_list = self.crawl_hashtag_info()
-        print(hashtag_info_list)
-        # hashtag_info = self.crawl_hashtag_info()
 
-        # self.upsert_db_channel_info(channel_info)
-        # self.upsert_db_video_info(video_info_list)
-        # self.upsert_db_hashtag_info(hashtag_info)
+        self.upsert_db_channel_info(channel_info)
+        #self.upsert_db_video_info(video_info_list)
+        #self.upsert_db_hashtag_info(hashtag_info_list)
 
 
 if __name__ == "__main__":
