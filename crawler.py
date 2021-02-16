@@ -8,8 +8,6 @@ import random
 # import sqlalchemy
 from sqlalchemy import create_engine
 
-DB_CONNECT_INFO = ""
-
 
 class TikTokCrawler(object):
 
@@ -85,8 +83,8 @@ class TikTokCrawler(object):
             'channel_user_id':author_info['uniqueId'],
             'channel_secret_id':secret_id,
             'channel_nickname':author_info['nickname'],
-            'channel_registered_date':datetime.date.today(),
-            'channel_crawl_date':datetime.date.today(),
+            'channel_registered_date':datetime.date.today().isoformat(),
+            'channel_crawl_date':datetime.date.today().isoformat(),
             'following_count':author_stat['followingCount'],
             'follower_count':author_stat['followerCount'],
             'heart_count':author_stat['heartCount'],
@@ -132,8 +130,8 @@ class TikTokCrawler(object):
                 video_info = {
                     'video_id' : item['id'],
                     'channel_id' : item['author']['id'],
-                    'video_create_date' : datetime.datetime.fromtimestamp(item['createTime']).date(),
-                    'video_crawl_date' : datetime.date.today(),
+                    'video_create_date' : datetime.datetime.fromtimestamp(item['createTime']).date().isoformat(),
+                    'video_crawl_date' : datetime.date.today().isoformat(),
                     'video_description' : item['desc'],
                     'video_hashtag': ','.join(hash_list),
                     'digg_count':item['stats']['diggCount'],
@@ -169,7 +167,7 @@ class TikTokCrawler(object):
         
         for challenge in res['challengeInfoList']:
             hashtag_info = {
-                'tag_crawl_date' : datetime.date.today(),
+                'tag_crawl_date' : datetime.date.today().isoformat(),
                 'tag_id': challenge['challenge']['id'],
                 'tag_title': challenge['challenge']['title'],
                 'tag_description': challenge['challenge']['desc'],
@@ -194,7 +192,7 @@ class TikTokCrawler(object):
                 'channel_user_id':channel_info['channel_user_id'],
                 'channel_secret_id':channel_info['channel_secret_id'],
                 'channel_nickname':channel_info['channel_nickname'],
-                'channel_registered_date':channel_info['channel_registerd_date']
+                'channel_registered_date':channel_info['channel_registered_date']
             }
             db_engine.execute(query,params)## at DB channel_info table update
         except Exception as e:
@@ -214,7 +212,7 @@ class TikTokCrawler(object):
                 'digg_count':channel_info['digg_count'],
                 'video_count':channel_info['video_count']
             }
-            #db_engine.execute(query,params)## at DB channel_info table update
+            db_engine.execute(query,params)## at DB channel_info table update
         except Exception as e:
             print(e)
         
@@ -246,7 +244,7 @@ class TikTokCrawler(object):
                 query = '''
                     insert into video_info_daily(video_crawl_date, video_id, digg_count, share_count,comment_count,play_count)
                     values (%(video_crawl_date)s, %(video_id)s, %(digg_count)s, %(share_count)s,%(comment_count)s,%(play_count)s)
-                    on conflict do update set digg_count =%(digg_count)s, share_count = %(share_count)s, comment_count = %(comment_count)s,play_count = %(play_count)s;
+                    on conflict (video_crawl_date,video_id) do update set digg_count =%(digg_count)s, share_count = %(share_count)s, comment_count = %(comment_count)s,play_count = %(play_count)s;
                     '''
                 params = {
                     'video_crawl_date' : video_info['video_crawl_date'],
@@ -271,8 +269,8 @@ class TikTokCrawler(object):
             try:
                 query = '''
                     insert into hashtag_info_daily(tag_crawl_date, tag_id, tag_title, tag_description,tag_video_count,tag_view_count)
-                    alues (%(tag_crawl_date)s, %(tag_id)s, %(tag_title)s, %(tag_description)s,%(tag_video_count)s,%(tag_view_count)s)
-                    on conflict do nothing;
+                    values (%(tag_crawl_date)s, %(tag_id)s, %(tag_title)s, %(tag_description)s,%(tag_video_count)s,%(tag_view_count)s)
+                    on conflict (tag_crawl_date,tag_id) do nothing;
                 '''
                 params = {
                     'tag_crawl_date' : hashtag['tag_crawl_date'],
@@ -296,13 +294,13 @@ class TikTokCrawler(object):
         
         channel_info = self.crawl_channel_info(self.secret_id)
         print(channel_info)    
-        #video_info_list = self.crawl_video_info(self.secret_id)
-        #hashtag_info_list = self.crawl_hashtag_info()
+        video_info_list = self.crawl_video_info(self.secret_id)
+        hashtag_info_list = self.crawl_hashtag_info()
         
 
         self.upsert_db_channel_info(channel_info)
-        #self.upsert_db_video_info(video_info_list)
-        #self.upsert_db_hashtag_info(hashtag_info_list)
+        self.upsert_db_video_info(video_info_list)
+        self.upsert_db_hashtag_info(hashtag_info_list)
 
 
 if __name__ == "__main__":
