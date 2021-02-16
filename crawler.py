@@ -13,7 +13,6 @@ class TikTokCrawler(object):
 
     def __init__(self, user_id):
 
-        
         self.channel_id = ""  # 1232124541234 정수문자열형태
         self.secret_id = ""  # MAS21das123asd 해싱형태
         self.user_id = user_id
@@ -52,47 +51,57 @@ class TikTokCrawler(object):
 
 
     def convert_user_id_to_secret_id(self, user_id):
+        try:
+            url = f"https://www.tiktok.com/@{user_id}"
+            res = requests.get(url)
+            secuid_start_index = res.text.find('secUid')
+            secret_id = res.text[int(secuid_start_index):].split('"')[2]
+            return secret_id
 
-        url = f"https://www.tiktok.com/@{user_id}"
-
-        res = requests.get(url)
-        secuid_start_index = res.text.find('secUid')
-        secret_id = res.text[int(secuid_start_index):].split('"')[2]
-
-        return secret_id
+        except Exception as e:
+            print("CAN'T GET USER SECRET ID")
+            print(e)
+            return None
 
     def crawl_channel_info(self, secret_id):
-        
-        now = str(time.time()).split('.')[0]
-        url = 'https://t.tiktok.com/api/post/item_list/?aid=1988'
-        for key,value in self.base_url.items():
-            if key == 'cursor':
-                url = url + '&' + key + '=' + now + '000'
-            elif key == 'secUid':
-                url = url + '&' + key + '=' + secret_id
-            else:
-                url = url + '&' + key + '=' + value
+        try:
+            now = str(time.time()).split('.')[0]
+            url = 'https://t.tiktok.com/api/post/item_list/?aid=1988'
+            for key,value in self.base_url.items():
+                if key == 'cursor':
+                    url = url + '&' + key + '=' + now + '000'
+                elif key == 'secUid':
+                    url = url + '&' + key + '=' + secret_id
+                else:
+                    url = url + '&' + key + '=' + value
+        except Exception as e:
+            print(e)
+            
+        try:
+            print(url)
+            res = requests.get(url)
+            res = json.loads(str(res.text))
+            author_info = res['itemList'][0]['author']
+            author_stat = res['itemList'][0]['authorStats']
+            channel_info = {
+                'channel_id':author_info['id'],
+                'channel_user_id':author_info['uniqueId'],
+                'channel_secret_id':secret_id,
+                'channel_nickname':author_info['nickname'],
+                'channel_registered_date':datetime.date.today().isoformat(),
+                'channel_crawl_date':datetime.date.today().isoformat(),
+                'following_count':author_stat['followingCount'],
+                'follower_count':author_stat['followerCount'],
+                'heart_count':author_stat['heartCount'],
+                'video_count':author_stat['videoCount'],
+                'digg_count':author_stat['diggCount']
+            }
 
-        print(url)
-        res = requests.get(url)
-        res = json.loads(str(res.text))
-        author_info = res['itemList'][0]['author']
-        author_stat = res['itemList'][0]['authorStats']
-        channel_info = {
-            'channel_id':author_info['id'],
-            'channel_user_id':author_info['uniqueId'],
-            'channel_secret_id':secret_id,
-            'channel_nickname':author_info['nickname'],
-            'channel_registered_date':datetime.date.today().isoformat(),
-            'channel_crawl_date':datetime.date.today().isoformat(),
-            'following_count':author_stat['followingCount'],
-            'follower_count':author_stat['followerCount'],
-            'heart_count':author_stat['heartCount'],
-            'video_count':author_stat['videoCount'],
-            'digg_count':author_stat['diggCount']
-        }
-
-        return channel_info  # dict
+            return channel_info  # dict
+        except Exception as e:
+            print("CAN'T GET CHANNEL INFO")
+            print(e)
+            
 
     def crawl_video_info(self, secret_id):
         
@@ -113,20 +122,20 @@ class TikTokCrawler(object):
                     url = url + '&' + key + '=' + secret_id
                 else:
                     url = url + '&' + key + '=' + value
-            
-            time.sleep(random.randrange(1, 3) +random.random())
-            res = requests.get(url) # randomized requesting
-            res = json.loads(str(res.text))
-            
-            for item in res['itemList']:
-                hash_list = []
-                try:# if video does not have hashtag
-                    for hashtag in item['challenges']:
-                        hash_list.append(hashtag['title'])
-                except:
-                    hash_list.append("None")
-
-
+            try:
+                time.sleep(random.randrange(1, 3) +random.random())
+                res = requests.get(url) # randomized requesting
+                res = json.loads(str(res.text))
+                for item in res['itemList']:
+                    hash_list = []
+                    try:# if video does not have hashtag
+                        for hashtag in item['challenges']:
+                            hash_list.append(hashtag['title'])
+                    except:
+                        hash_list.append("None")
+            except Exception as e:
+                print(e)
+            try:
                 video_info = {
                     'video_id' : item['id'],
                     'channel_id' : item['author']['id'],
@@ -139,14 +148,15 @@ class TikTokCrawler(object):
                     'comment_count':item['stats']['commentCount'],
                     'play_count':item['stats']['playCount'],
                 }
-                #print(video_info)
                 video_info_list.append(video_info)
-            print(res['hasMore'])
-            if res['hasMore'] == True:
-                cursor = res['cursor']
-                print('NEXT CURSOR :',cursor)
-            elif res['hasMore'] == False:
-                break
+                print(res['hasMore'])
+                if res['hasMore'] == True:
+                    cursor = res['cursor']
+                    print('NEXT CURSOR :',cursor)
+                elif res['hasMore'] == False:
+                    break
+            except Exception as e:
+                print(e)
                 
         return video_info_list
 
@@ -259,7 +269,6 @@ class TikTokCrawler(object):
                 print(e)
         db_engine.dispose()
         print('UPSERT DB VIDEO INFO&DAILY TABLE DONE')
-
 
     def upsert_db_hashtag_info(self, hashtag_info_list):
         
