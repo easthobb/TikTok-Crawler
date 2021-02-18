@@ -3,9 +3,7 @@ from bs4 import BeautifulSoup
 import time
 import datetime
 import json
-# import urllib
 import random
-# import sqlalchemy
 from sqlalchemy import create_engine
 
 
@@ -48,7 +46,6 @@ class TikTokCrawler(object):
             'language': 'ko-KR',
             'secUid': '' #secret_id 로 세팅 필요 - hashtag엔 미존재
         }
-
 
     def convert_user_id_to_secret_id(self, user_id):
         try:
@@ -124,7 +121,7 @@ class TikTokCrawler(object):
                     url = url + '&' + key + '=' + value
             try:
                 time.sleep(random.randrange(1, 3) +random.random())
-                res = requests.get(url) # randomized requesting
+                res = requests.get(url) # randomized requesting interval
                 res = json.loads(str(res.text))
                 for item in res['itemList']:
                     hash_list = []
