@@ -15,7 +15,7 @@ from sqlalchemy import create_engine
 class TikTokFeedCrawler(object):
 
     def __init__(self):
-        self.db_connection_info = 'postgresql://hobbes:6132@localhost:5432/crawler'
+        
         self.tiktok_url = 'https://www.tiktok.com/'
         self.feed_url = 'https://t.tiktok.com/api/recommend/item_list/?aid=1988&app_name=tiktok_web&device_platform=web&referer=&root_referer=&user_agent=Mozilla%2F5.0+(Windows+NT+10.0%3B+Win64%3B+x64)+AppleWebKit%2F537.36+(KHTML,+like+Gecko)+Chrome%2F88.0.4324.150+Safari%2F537.36&cookie_enabled=true&screen_width=2560&screen_height=1440&browser_language=ko-KR&browser_platform=Win32&browser_name=Mozilla&browser_version=5.0+(Windows+NT+10.0%3B+Win64%3B+x64)+AppleWebKit%2F537.36+(KHTML,+like+Gecko)+Chrome%2F88.0.4324.150+Safari%2F537.36&browser_online=true&ac=4g&timezone_name=Asia%2FSeoul&priority_region=&verifyFp=verify_kl8znk7j_UCx7rIre_7LBx_4qud_BioE_XdjXw1dexl2R&appId=1180&region=KR&appType=t&isAndroid=false&isMobile=false&isIOS=false&OS=windows&did=6923212441551719681&count=30&itemID=1'
         self.max_feed_count = 100

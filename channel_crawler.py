@@ -6,11 +6,15 @@ import json
 import random
 from sqlalchemy import create_engine
 
-
+#https://docs.google.com/spreadsheets/d/1gaZRmJHTsmyV31j59yAIt4Kk568m9KlRH4RnKGScgrY/edit#gid=2022621731
 class TikTokChannelCrawler(object):
+    """[summary]
 
+    Args:
+        object ([type]): [description]
+    """
     def __init__(self, user_id):
-        self.db_connection_info = 'postgresql://hobbes:6132@localhost:5432/crawler'
+        
         self.channel_id = ""  # 1232124541234 정수문자열형태
         self.secret_id = ""  # MAS21das123asd 해싱형태
         self.user_id = user_id
