@@ -7,10 +7,10 @@ import random
 from sqlalchemy import create_engine
 
 
-class TikTokCrawler(object):
+class TikTokChannelCrawler(object):
 
     def __init__(self, user_id):
-
+        self.db_connection_info = 'postgresql://hobbes:6132@localhost:5432/crawler'
         self.channel_id = ""  # 1232124541234 정수문자열형태
         self.secret_id = ""  # MAS21das123asd 해싱형태
         self.user_id = user_id
@@ -99,7 +99,6 @@ class TikTokCrawler(object):
             print("CAN'T GET CHANNEL INFO")
             print(e)
             
-
     def crawl_video_info(self, secret_id):
         
         video_info_list = []
@@ -298,21 +297,24 @@ class TikTokCrawler(object):
         self.secret_id = secret_id
         print("CHANNEL SECRET ID : ", secret_id)
         
-        channel_info = self.crawl_channel_info(self.secret_id)
-        print(channel_info)    
-        video_info_list = self.crawl_video_info(self.secret_id)
-        hashtag_info_list = self.crawl_hashtag_info()
-        
+        try: # channel & video crawling
+            channel_info = self.crawl_channel_info(self.secret_id)
+            video_info_list = self.crawl_video_info(self.secret_id)
+            self.upsert_db_channel_info(channel_info)
+            self.upsert_db_video_info(video_info_list)
+        except Exception as e:
+            print(e)
 
-        self.upsert_db_channel_info(channel_info)
-        self.upsert_db_video_info(video_info_list)
-        self.upsert_db_hashtag_info(hashtag_info_list)
-
+        try: # tag crawling
+            hashtag_info_list = self.crawl_hashtag_info()
+            self.upsert_db_hashtag_info(hashtag_info_list)
+        except Exception as e:
+            print(e)
 
 if __name__ == "__main__":
 
     print("INPUT TIKTOK CHANNEL ID : ")
     user_id = input()
-    crawler = TikTokCrawler(user_id)
+    crawler = TikTokChannelCrawler(user_id)
     crawler.start()
     print("ALL DONE")
