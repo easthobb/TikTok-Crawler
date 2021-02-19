@@ -8,10 +8,10 @@ from sqlalchemy import create_engine
 
 #https://docs.google.com/spreadsheets/d/1gaZRmJHTsmyV31j59yAIt4Kk568m9KlRH4RnKGScgrY/edit#gid=2022621731
 class TikTokChannelCrawler(object):
-    """[summary]
-
-    Args:
-        object ([type]): [description]
+    """
+    ver 1.0, 작성자 : 김동호@DMK
+    채널의 이름을 인자로 받아,
+    틱톡 개별 채널과 채널의 비디오를 크롤링하고 DB에 삽입까지 수행하는 메서드들이 포함된 클래스입니다.
     """
     def __init__(self, user_id):
         
@@ -52,6 +52,14 @@ class TikTokChannelCrawler(object):
         }
 
     def convert_user_id_to_secret_id(self, user_id):
+        """[summary]
+        입력받은 채널(틱톡커)의 user 아이디(변경가능 값)을 크롤링 url 생성을 위한 secUID로 전환합니다.
+        Args:
+            user_id (string): 사용자 ID 
+
+        Returns:
+            secret_id(string): 사용자 secret_id(틱톡 서버 내부용)
+        """
         try:
             url = f"https://www.tiktok.com/@{user_id}"
             res = requests.get(url)
@@ -62,9 +70,17 @@ class TikTokChannelCrawler(object):
         except Exception as e:
             print("CAN'T GET USER SECRET ID")
             print(e)
-            return None
+            return ""
 
     def crawl_channel_info(self, secret_id):
+        """[summary]
+        채널 정보를 크롤링 하는 메소드 닉네임,채널ID,팔로잉,팔로워,좋아요수,좋아요한수,총비디오수 등을 크롤링
+        Args:
+            secret_id (string): 사용자 secret_id(틱톡 서버 내부용)
+
+        Returns:
+            channel_info[dict]: 채널 정보의 딕셔너리
+        """
         try:
             now = str(time.time()).split('.')[0]
             url = 'https://t.tiktok.com/api/post/item_list/?aid=1988'
@@ -104,6 +120,15 @@ class TikTokChannelCrawler(object):
             print(e)
             
     def crawl_video_info(self, secret_id):
+        """[summary]
+        채널이 업로드한 video 목록과 개별 video 들의 정보를 크롤링하는 메서드
+        비디오ID,생성날짜,설명,해시태그,좋아요수,공유수,댓글수,재생수 등을 크롤링
+        Args:
+            secret_id (string): 사용자 secret_id(틱톡 서버 내부용)
+
+        Returns:
+            video_info_list(list of dict): 비디오 정보가 담긴 딕셔너리의 리스트 
+        """
         
         video_info_list = []
 
@@ -161,7 +186,12 @@ class TikTokChannelCrawler(object):
         return video_info_list
 
     def crawl_hashtag_info(self):
-        
+        """[summary]
+        틱톡의 일간 인기 hashtag 를 크롤링해주는 메소드
+        태그이름, 설명, 태그 비디오 수, 태그 시청 수
+        Returns:
+            hashtag_info_list(list of dict): 개별 해시태그의 정보(딕셔너리)의 리스트
+        """
         hashtag_info_list = []
 
         url = 'https://t.tiktok.com/api/discover/challenge/?aid=1988'
@@ -188,6 +218,11 @@ class TikTokChannelCrawler(object):
         return hashtag_info_list
 
     def upsert_db_channel_info(self, channel_info):
+        """[summary]
+        크롤링한 채널 정보를 DB의 channel_list 테이블에 upsert 해주는 함수
+        Args:
+            channel_info (dict): 채널의 정보
+        """
         
         db_engine = create_engine(self.db_connection_info)
 
@@ -230,6 +265,11 @@ class TikTokChannelCrawler(object):
         print("UPSERT DB CHANNEL INFO& DAILY TABLES DONE")
 
     def upsert_db_video_info(self, video_info_list):
+        """[summary]
+        크롤링한 비디오 정보를 DB의 video_list 테이블 및 video_info_daily에 upsert 해주는 함수
+        Args:
+            video_info_list (list of dict): 개별 비디오의 정보 리스트
+        """
         db_engine = create_engine(self.db_connection_info) # set DB engine by attribute's db info
 
         for video_info in video_info_list:
@@ -271,6 +311,11 @@ class TikTokChannelCrawler(object):
         print('UPSERT DB VIDEO INFO&DAILY TABLE DONE')
 
     def upsert_db_hashtag_info(self, hashtag_info_list):
+        """[summary]
+        크롤링한 해시태그 정보를 DB의 hashtag_info_list 테이블에 upsert 해주는 함수
+        Args:
+            hashtag_info_list (list of dict): 개별 해시태그 정보의 리스트
+        """
         
         db_engine = create_engine(self.db_connection_info) # set DB engine by attribute's db info
 

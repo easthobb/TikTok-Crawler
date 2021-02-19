@@ -13,6 +13,9 @@ from sqlalchemy import create_engine
 
 
 class TikTokFeedCrawler(object):
+    """[summary]
+    틱톡 웹에서 일별로 추천되는 피드의 정보를 크롤링하는 함수(셀레늄 의존)
+    """
 
     def __init__(self):
         
@@ -21,6 +24,14 @@ class TikTokFeedCrawler(object):
         self.max_feed_count = 100
 
     def parse_tik(self, page_source: str):
+        """[summary]
+        셀레늄으로 긁어온 페이지 소스에서 개별 피드의 정보를 크롤링 하는 함수
+        Args:
+            page_source (str): 페이지 소스
+
+        Returns:
+            res_list(list of dict): 개별 피드의 정보의 리스트
+        """
 
         res_list = []
         html = BeautifulSoup(page_source, 'html.parser')
@@ -55,7 +66,6 @@ class TikTokFeedCrawler(object):
             units = {"K": 1000, "M": 1000000, "B": 1000000000}  # 정수형 변환 및 칼럼이름 변경
             coverted_reaction = {}
             for key, value in reaction_params.items():
-                print(key, value)
                 try:
                     coverted_reaction[key] = int(value)
                 except ValueError:
@@ -81,7 +91,11 @@ class TikTokFeedCrawler(object):
         return res_list
 
     def crawl_feed_info(self):
-
+        """[summary]
+        틱톡 피드를 크롤링하는 메서드
+        Returns:
+            feed_info(pd.DateFrame): 벌크 삽입용 데이터 프레임
+        """
         url = self.feed_url
         res = requests.get(url)
         driver = webdriver.Chrome(ChromeDriverManager().install())
@@ -105,7 +119,11 @@ class TikTokFeedCrawler(object):
         return feed_info
 
     def insert_db_feed_info(self,feed_info:pd.DataFrame):
-
+        """[summary]
+        Postgre DB에 feed_info 를 insert 하는 함수
+        Args:
+            feed_info (pd.DataFrame): 피드 정보 데이터 프레임
+        """
         engine = create_engine(self.db_connection_info)
 
         feed_info.to_sql(name='feed_info_daily',
@@ -135,8 +153,6 @@ class TikTokFeedCrawler(object):
         except Exception as e :
             print(e)
             print("CAN NOT CRAWL FEED INFO")
-
-        print('done')
 
 if __name__ == '__main__':
 
