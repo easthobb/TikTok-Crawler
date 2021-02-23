@@ -1,0 +1,51 @@
+create table public.channel_list(
+	channel_id varchar(50),
+	channel_user_id varchar(50),
+	channel_secret_id varchar(100),
+	channel_nickname varchar(50),
+	channel_registered_date date,
+	primary key(channel_id)
+);
+
+create table public.channel_info_daily(
+	channel_crawl_date date,
+	channel_id varchar(50),
+	following_count integer,
+	follower_count integer,
+	heart_count integer,
+	digg_count integer,
+	video_count integer,
+	foreign key(channel_id) references channel_list(channel_id),
+	primary key(channel_crawl_date,channel_id)
+);
+
+create table public.video_list(
+	video_id varchar(50),
+	channel_id varchar(50),
+	video_create_date date,
+	video_description text,
+	video_hashtag text,
+	foreign key (channel_id) references channel_list(channel_id),
+	primary key(video_id)
+);
+
+create table public.video_info_daily(
+	video_crawl_date date,
+	video_id varchar(50),
+	digg_count integer,
+	share_count integer,
+	comment_count integer,
+	play_count bigint,
+	foreign key (video_id) references video_list(video_id),
+	primary key (video_crawl_date,video_id)
+);
+
+create table public.hashtag_info_daily(
+	tag_crawl_date date,
+	tag_id varchar(50),
+	tag_title varchar(50),
+	tag_description text,
+	tag_video_count integer,
+	tag_view_count bigint,
+	primary key (tag_id, tag_crawl_date)
+);
