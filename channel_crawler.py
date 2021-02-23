@@ -6,15 +6,14 @@ import json
 import random
 from sqlalchemy import create_engine
 
-#https://docs.google.com/spreadsheets/d/1gaZRmJHTsmyV31j59yAIt4Kk568m9KlRH4RnKGScgrY/edit#gid=2022621731
 class TikTokChannelCrawler(object):
     """
-    ver 1.0, 작성자 : 김동호@DMK
+    ver 1.0, 작성자 : 김동호@DMK, 작성일:2021.02.19, 최근 수정일:2021.02.19
     채널의 이름을 인자로 받아,
     틱톡 개별 채널과 채널의 비디오를 크롤링하고 DB에 삽입까지 수행하는 메서드들이 포함된 클래스입니다.
     """
     def __init__(self, user_id):
-        
+        self.db_connection_info = 'postgresql://username:userpwd@localhost:5432/crawler'
         self.channel_id = ""  # 1232124541234 정수문자열형태
         self.secret_id = ""  # MAS21das123asd 해싱형태
         self.user_id = user_id
