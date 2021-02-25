@@ -2,7 +2,7 @@
 
 This repository implements Tiktok's channel and challenge crawler(channel_crawler.py) and recommended feed crawler(feed_crawler.py). The composition of this repo includes code to insert and load data into the attached Postgre DB. It analyzes requests that web elements from inside TikTok without using API and sends queries to TikTok servers to crawl. In case of channel information when crawling, it is executed by inserting the id of the channel user as the input factor.
 
-본 레포지토리에서는 틱톡의 채널정보/일간인기 해시태그 정보(channel_crawler.py), 추천 피드정보(feed_crawler.py)를 구현했다. 본 레포의 구성은 첨부된 Postgresql table에 데이터를 삽입하고 적재하는 코드까지 포함된다. API를 사용하지 않고 틱톡 내부에서 웹 요소를 끌어오는 요청을 분석해 쿼리를 틱톡 서버로 보내 크롤링한다. 크롤링시 채널 정보같은 경우 채널 user의 id를 입력 인자로 넣어주면 실행된다. 
+본 레포지토리에서는 틱톡의 채널정보/일간인기 해시태그 정보(channel_crawler.py), 추천 피드정보(feed_crawler.py)를 구현했다. 본 레포의 구성은 첨부된 Postgresql table에 데이터를 삽입하고 적재하는 코드까지 포함된다. API를 사용하지 않고 틱톡 내부에서 웹 요소를 끌어오는 요청을 분석해 쿼리를 틱톡 서버로 보내 스크래핑한다. 크롤링시 채널 정보같은 경우 채널 user의 id를 입력 인자로 넣어주면 실행된다. 
 
 You can see dev log here!
 [https://www.notion.so/hobbeskim/TikTok-Crawler-cf374f0f14674f97b3edd278c953ec99]
@@ -33,6 +33,7 @@ You can see dev log here!
     ### CLI
 
     python channel_crawler.py
+    
     ### enter
     > channel_id
 
